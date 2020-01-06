@@ -1,0 +1,47 @@
+package com.lisardon.udf;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.apache.hadoop.hive.ql.exec.UDF;
+
+public class SplitMax extends UDF {
+  public String evaluate(String column) {
+    if (null == column) {
+      return null;
+    }
+    
+    String[] str_arr = column.split("\\;");
+    List<String> str_arr1 = Arrays.asList(str_arr);
+    ArrayList<String> str_arr2 = new ArrayList<String>(str_arr1);
+    String str_ind = "";
+    for (int i = 0; i < str_arr.length; i++) {
+      for (int j = 0; j < str_arr.length; j++) {
+        if (i != j && 
+          str_arr[i].split(":")[0].equals(str_arr[j].split(":")[0]) && str_arr[i].split(":")[1].equals(str_arr[j].split(":")[1]) && Integer.parseInt(str_arr[i].split(":")[2]) < Integer.parseInt(str_arr[j].split(":")[2])) {
+          str_ind = str_ind + "+" + String.valueOf(i);
+          
+          break;
+        } 
+      } 
+    } 
+    if (str_ind.length() > 0) {
+      String[] a = str_ind.substring(1).split("\\+");
+      for (int i = a.length - 1; i >= 0; i--) {
+        str_arr2.remove(Integer.parseInt(a[i]));
+      }
+    } 
+    String ret = "";
+    for (int i = 0; i < str_arr2.size(); i++) {
+      ret = ret + str_arr2.get(i).toString() + ";";
+    }
+    return ret;
+  }
+  public static void main(String[] argv) {
+    SplitMax sm = new SplitMax();
+    String s1 = "aaa:111:200;aaa:222:231;aaa:111:124;aaa:222:234;aaa:111:121;aaa:111:200;";
+    
+    String ret = sm.evaluate(s1);
+    System.out.println(ret);
+  }
+}
